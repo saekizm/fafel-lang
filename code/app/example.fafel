@@ -1,0 +1,14 @@
+contract myContract {
+state {
+value : int
+myList : list 
+}
+
+
+addValue : (state -> int) -> int
+addValue s x = s.value + 3 * 2
+
+getValue : (state) -> int
+getValue s = s.value
+
+}
