@@ -10,13 +10,13 @@ data Contract = Contract String [StateVariable] [Function]
 data StateVariable = StateVariable String DataType
   deriving (Show)
 
-data DataType = IntType | FloatType | BoolType | AddressType | ListType | MapType | StateType
+data DataType = IntType | FloatType | BoolType | AddressType | ListType | MapType (DataType, DataType) | StateType
   deriving (Show)
 
 data Function = Function String [DataType] DataType Expr
   deriving (Show)
 
-data Expr = Literal Literal | Var String | FunctionCall String [Expr] | FunctionExpr String [Expr] Expr | IfExpr Expr Expr Expr | MapExpr [(Expr, Expr)] |ListExpr [Expr] | BinaryExpr BinaryOperator Expr Expr | UnaryExpr UnaryOperator Expr | CompareExpr CompareOperator Expr Expr
+data Expr = Literal Literal | Var String | FunctionCall String [Expr] | FunctionExpr String [Expr] Expr | IfExpr Expr Expr Expr | MapExpr String Expr | MapAssignExpr String Expr Expr | ListExpr [Expr] | BinaryExpr BinaryOperator Expr Expr | UnaryExpr UnaryOperator Expr | CompareExpr CompareOperator Expr Expr
   deriving (Show)
 
 data Literal = IntLit Integer | FloatLit Float | BoolLit Bool | AddressLit String
@@ -110,8 +110,13 @@ listTypeParser = do
 
 mapTypeParser :: Parser DataType
 mapTypeParser = do
-    string "map"
-    return MapType
+    string "mapping"
+    char '('
+    ty1 <- dataTypeParser
+    string "->"
+    ty2 <- dataTypeParser
+    char ')'
+    return (MapType (ty1, ty2))
 
 stateTypeParser :: Parser DataType
 stateTypeParser = do
@@ -137,16 +142,23 @@ listExprParser = do
 --works
 mapExprParser :: Parser Expr
 mapExprParser = do
-  char '{'
-  spaces
+  name <- identifier
+  char '['
   key <- exprParser
+  char ']'
+  return (MapExpr name key)
+
+mapAssignParser :: Parser Expr
+mapAssignParser = do
+  name <- identifier
+  char '['
+  key <- exprParser
+  char ']'
   spaces
-  char ':'
-  spaces
-  value <- exprParser
-  spaces
-  char '}'
-  return (MapExpr [(key, value)])
+  char '='
+  spaces 
+  val <- exprParser
+  return (MapAssignExpr name key val)
 
 --works
 exprParser :: Parser Expr
@@ -157,6 +169,7 @@ exprParser = try functionExprParser
            <|> try compareExprParser
            <|> try unaryExprParser
            <|> try listExprParser
+           <|> try mapAssignParser
            <|> try mapExprParser
            <|> try varExprParser
            <|> try literalParser
