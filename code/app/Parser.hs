@@ -4,6 +4,8 @@ import Text.Parsec
 import Text.Parsec.String
 import Text.Parsec.Expr
 import System.IO
+import Debug.Trace
+
 data Contract = Contract String [StateVariable] [Function]
   deriving (Show)
 
@@ -33,7 +35,7 @@ data CompareOperator = Less | Greater | LessEq | GreaterEq | Equal | NotEqual
 
 
 identifier :: Parser String
-identifier = do
+identifier = trace "identifier" $ do
     firstChar <- letter
     rest <- many (letter <|> digit <|> char '.')
     return (firstChar:rest)
@@ -74,13 +76,13 @@ isHexDigit c = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && 
 
 --type parsers--
 dataTypeParser :: Parser DataType
-dataTypeParser = try intTypeParser
-                <|> try floatTypeParser
-                <|> try boolTypeParser
-                <|> try addressTypeParser
-                <|> try listTypeParser
+dataTypeParser = try stateTypeParser
                 <|> try mapTypeParser
-                <|> try stateTypeParser
+                <|> try listTypeParser
+                <|> try addressTypeParser
+                <|> try floatTypeParser
+                <|> try intTypeParser
+                <|> try boolTypeParser
 
 floatTypeParser :: Parser DataType
 floatTypeParser = do
@@ -127,7 +129,7 @@ stateTypeParser = do
 --expression parsers--
 
 varExprParser :: Parser Expr
-varExprParser = do
+varExprParser = trace "Variable" $ do
   varName <- identifier
   return (Var varName)
 
@@ -289,7 +291,7 @@ compareOperatorParser = do
 
 
 contractParser :: Parser Contract
-contractParser = do
+contractParser = trace "Contract" $ do
   string "contract"
   spaces
   contractName <- identifier
@@ -303,25 +305,25 @@ contractParser = do
 
 --works
 stateParser :: Parser [StateVariable]
-stateParser = do
+stateParser = trace "State" $ do
   string "state"
   spaces
   char '{'
   newline
-  stateVars <- sepBy stateVariableParser (newline)
-  skipMany (oneOf " \n\t\r")
+  stateVars <- sepEndBy stateVariableParser (newline)
+  trace "Success" $ skipMany (oneOf " \n\t\r")
   char '}'
-  return stateVars
+  trace "State Parsed" $ return stateVars
 
 --works
 stateVariableParser :: Parser StateVariable
-stateVariableParser = do
+stateVariableParser = trace "Parse StateVar" $ do
   varName <- identifier
   spaces
   string ":"
   spaces
   varType <- dataTypeParser
-  return (StateVariable varName varType)
+  trace "STVR PARSED" $ return (StateVariable varName varType)
 
 
 
