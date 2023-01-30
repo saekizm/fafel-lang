@@ -12,7 +12,7 @@ data Contract = Contract String [StateVariable] [Function]
 data StateVariable = StateVariable String DataType
   deriving (Show)
 
-data DataType = IntType | FloatType | BoolType | AddressType | ListType | MapType (DataType, DataType) | StateType
+data DataType = IntType | FloatType | BoolType | AddressType | ListType [DataType] | MapType (DataType, DataType) | StateType
   deriving (Show)
 
 data Function = Function String [DataType] DataType Expr
@@ -107,8 +107,10 @@ addressTypeParser = do
 
 listTypeParser :: Parser DataType
 listTypeParser = do
-  string "list"
-  return ListType
+  char '['
+  ty <- dataTypeParser
+  char ']'
+  return (ListType [ty])
 
 mapTypeParser :: Parser DataType
 mapTypeParser = do
@@ -153,9 +155,9 @@ mapExprParser = do
 mapAssignParser :: Parser Expr
 mapAssignParser = do
   name <- identifier
-  char '['
+  char '{'
   key <- exprParser
-  char ']'
+  char '}'
   spaces
   char '='
   spaces 
@@ -167,12 +169,12 @@ exprParser :: Parser Expr
 exprParser = try functionExprParser
            <|> try functionCallParser
            <|> try ifExprParser
-           <|> try binaryExprParser
-           <|> try compareExprParser
-           <|> try unaryExprParser
            <|> try listExprParser
            <|> try mapAssignParser
            <|> try mapExprParser
+           <|> try binaryExprParser
+           <|> try compareExprParser
+           <|> try unaryExprParser
            <|> try varExprParser
            <|> try literalParser
 
@@ -231,14 +233,14 @@ functionCallParser = do
 
 -- tested and works!
 functionExprParser :: Parser Expr
-functionExprParser = do
+functionExprParser = trace "start" $ do
   var <- identifier
   spaces
   args <- sepEndBy (try varExprParser <|> try literalParser <|> try listExprParser <|> try mapExprParser) spaces
   string "="
   spaces
   expr <- exprParser
-  return (FunctionExpr var args expr)
+  trace "got" $ return (FunctionExpr var args expr)
 
 --works
 functionSigParser :: Parser (String, [DataType], DataType)
