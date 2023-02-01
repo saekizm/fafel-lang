@@ -145,12 +145,12 @@ listExprParser = do
 
 --works
 mapExprParser :: Parser Expr
-mapExprParser = do
+mapExprParser = trace "Hello" $ do
   name <- identifier
-  char '['
+  char '{'
   key <- exprParser
-  char ']'
-  return (MapExpr name key)
+  char '}'
+  trace "Map" $ return (MapExpr name key)
 
 mapAssignParser :: Parser Expr
 mapAssignParser = do
@@ -260,6 +260,7 @@ functionParser = do
     (name, inputTypes, outputType) <- functionSigParser
     newline
     expr <- functionExprParser
+    skipMany (oneOf " \t\r\n")
     return (Function name inputTypes outputType expr)
 
 
