@@ -1,4 +1,6 @@
-module Parser where
+module Parser(
+  module Parser
+) where
 
 import Text.Parsec
 import Text.Parsec.String
@@ -9,16 +11,16 @@ import Debug.Trace
 data Contract = Contract String [StateVariable] [Function]
   deriving (Show)
 
-data StateVariable = StateVariable String DataType
-  deriving (Show)
-
 data DataType = IntType | FloatType | BoolType | AddressType | ListType [DataType] | MapType (DataType, DataType) | StateType
   deriving (Show)
 
+data StateVariable = MapDecl String DataType | ListDecl String DataType | IntDecl String DataType | FloatDecl String DataType | BoolDecl String DataType | AddressDecl String DataType
+  deriving (Show)
+  
 data Function = Function String [DataType] DataType Expr
   deriving (Show)
 
-data Expr = Literal Literal | Var String | FunctionCall String [Expr] | FunctionExpr String [Expr] Expr | IfExpr Expr Expr Expr | MapExpr String Expr | MapAssignExpr String Expr Expr | ListExpr [Expr] | BinaryExpr BinaryOperator Expr Expr | UnaryExpr UnaryOperator Expr | CompareExpr CompareOperator Expr Expr
+data Expr = Literal Literal | Var String | FunctionCall String [Expr] | FunctionExpr String [Expr] Expr | IfExpr Expr Expr Expr | MapExpr String Expr | MapAssignExpr String Expr Expr | ListExpr String Expr | ListAssignExpr String Expr Expr | BinaryExpr BinaryOperator Expr Expr | UnaryExpr UnaryOperator Expr | CompareExpr CompareOperator Expr Expr
   deriving (Show)
 
 data Literal = IntLit Integer | FloatLit Float | BoolLit Bool | AddressLit String
@@ -73,6 +75,67 @@ floatLiteralParser = do
 isHexDigit :: Char -> Bool
 isHexDigit c = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
 
+stateVariableParser :: Parser StateVariable
+stateVariableParser = try mapDeclParser
+            <|> try listDeclParser
+            <|> try addressDeclParser
+            <|> try floatDeclParser
+            <|> try intDeclParser
+            <|> try boolDeclParser
+
+intDeclParser :: Parser StateVariable
+intDeclParser = do
+  name <- identifier
+  spaces
+  char ':'
+  spaces
+  ty <- intTypeParser
+  return (IntDecl name ty)
+
+floatDeclParser :: Parser StateVariable
+floatDeclParser = do
+  name <- identifier
+  spaces
+  char ':'
+  spaces
+  ty <- floatTypeParser
+  return (FloatDecl name ty)
+
+boolDeclParser :: Parser StateVariable
+boolDeclParser = do
+  name <- identifier
+  spaces
+  char ':'
+  spaces
+  ty <- boolTypeParser
+  return (BoolDecl name ty)
+
+addressDeclParser :: Parser StateVariable
+addressDeclParser = do
+  name <- identifier
+  spaces
+  char ':'
+  spaces
+  ty <- addressTypeParser
+  return (AddressDecl name ty)
+
+mapDeclParser :: Parser StateVariable
+mapDeclParser = do
+  name <- identifier
+  spaces
+  char ':'
+  spaces
+  ty <- mapTypeParser
+  return (MapDecl name ty)
+
+listDeclParser :: Parser StateVariable
+listDeclParser = do
+  name <- identifier
+  spaces
+  char ':'
+  spaces
+  ty <- listTypeParser
+  return (ListDecl name ty)
 
 --type parsers--
 dataTypeParser :: Parser DataType
@@ -138,10 +201,23 @@ varExprParser = trace "Variable" $ do
 --works
 listExprParser :: Parser Expr
 listExprParser = do
+  name <- identifier
   char '['
-  elements <- sepBy exprParser (string ", ")
+  index <- intLiteralParser
   char ']'
-  return (ListExpr  elements)
+  return (ListExpr name index)
+
+listAssignParser :: Parser Expr
+listAssignParser = do
+  name <- identifier
+  char '['
+  index <- intLiteralParser
+  char ']'
+  spaces
+  char '='
+  spaces
+  val <- literalParser
+  return (ListAssignExpr name index val)
 
 --works
 mapExprParser :: Parser Expr
@@ -169,8 +245,9 @@ exprParser :: Parser Expr
 exprParser = try functionExprParser
            <|> try functionCallParser
            <|> try ifExprParser
-           <|> try listExprParser
            <|> try mapAssignParser
+           <|> try listAssignParser
+           <|> try listExprParser
            <|> try mapExprParser
            <|> try binaryExprParser
            <|> try compareExprParser
@@ -182,11 +259,11 @@ exprParser = try functionExprParser
 --works
 ifExprParser :: Parser Expr
 ifExprParser = do
-  string "if"
+  trace "if" $ string "if"
   spaces
   condition <- try binaryExprParser <|> try literalParser <|> try unaryExprParser
   newline
-  string "then"
+  trace "then" $ string "then"
   spaces
   thenExpr <- try binaryExprParser <|> try literalParser <|> try unaryExprParser
   newline
@@ -319,20 +396,13 @@ stateParser = trace "State" $ do
   trace "State Parsed" $ return stateVars
 
 --works
-stateVariableParser :: Parser StateVariable
-stateVariableParser = trace "Parse StateVar" $ do
-  varName <- identifier
-  spaces
-  string ":"
-  spaces
-  varType <- dataTypeParser
-  trace "STVR PARSED" $ return (StateVariable varName varType)
 
 
 
-main :: IO ()
-main = do
-    contents <- readFile "example.fafel"
-    case parse contractParser "example.fafel" contents of
-        Left error -> print error
-        Right ast -> print ast
+
+--main :: IO ()
+--main = do
+--    contents <- readFile "example.fafel"
+--    case parse contractParser "example.fafel" contents of
+--        Left error -> print error
+--        Right ast -> print ast

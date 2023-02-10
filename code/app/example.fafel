@@ -3,20 +3,20 @@ state {
 value : int
 myList : [int]
 mymap : mapping(int->int)
+myMap2 : mapping(int->int)
 }
 
 
 addValue : (state -> int) -> int
-addValue s x = s.value + 3 * 2
+addValue s x = value + 3 * 2
 
 accessMapping : (state -> int) -> int
 accessMapping s x = mymap{x}
-
 
 addMapping : (state -> int -> int) -> state
 addMapping s m x = mymap{m} = x
 
 getValue : (state) -> int
-getValue s = s.value
+getValue s = value
 
 }
