@@ -31,8 +31,5 @@ data Expr = FunctionCall String [Expr] |
 data Literal = IntLit Integer | FloatLit (Integer, Integer) | BoolLit Bool | AddressLit String
   deriving (Show, Eq)
 
-data BinaryOperator = StateVarAssign | Plus | Minus | Times | Divide | And | Or | In | Less | Greater | LessEq | GreaterEq | Equal | NotEqual
-  deriving (Show, Eq)
-
-data UnaryOperator = Not
+data BinaryOperator = StateVarAssign | Plus | Minus | Times | Divide | And | Or | Less | Greater | LessEq | GreaterEq | Equal | NotEqual
   deriving (Show, Eq)

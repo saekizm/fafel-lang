@@ -7,16 +7,16 @@ myMap2 : mapping(int->int)
 }
 
 
-addValue : (state -> int) -> int
-addValue s x = value + 3 * 2
+addValue : (int) -> float
+addValue x = value + 3 * 2.1
 
-accessMapping : (state -> int) -> int
-accessMapping s x = mymap{x}
+accessMapping : (int) -> int
+accessMapping x = mymap{x}
 
-addMapping : (state -> int -> int) -> state
-addMapping s m x = mymap{m} = x
+addMapping : (int -> int) -> state
+addMapping m x = mymap{m} = x
 
-getValue : (state) -> int
-getValue s = value
+getValue : () -> int
+getValue = value
 
 }
