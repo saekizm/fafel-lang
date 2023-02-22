@@ -1,79 +1,19 @@
-module Parser(
-  module Parser
-) where
+module Parser where
 
 import Text.Parsec
-import Text.Parsec.String
-import Text.Parsec.Expr
-import System.IO
-import Debug.Trace
+import Text.Parsec.String 
+import qualified Text.Parsec.Expr as Ex
+import qualified Text.Parsec.Token as Tok
+import Lexer
+import AST
 
-data Contract = Contract String [StateVariable] [Function]
-  deriving (Show)
+-- This file is used to parse Fafel source code into an AST
+-- we have a parser for each type of AST node
+-- we build the AST by combining these parsers
+-- and then we have a parser for the entire contract
 
-data DataType = IntType | FloatType | BoolType | AddressType | ListType [DataType] | MapType (DataType, DataType) | StateType
-  deriving (Show)
-
-data StateVariable = MapDecl String DataType | ListDecl String DataType | IntDecl String DataType | FloatDecl String DataType | BoolDecl String DataType | AddressDecl String DataType
-  deriving (Show)
-  
-data Function = Function String [DataType] DataType Expr
-  deriving (Show)
-
-data Expr = Literal Literal | Var String | FunctionCall String [Expr] | FunctionExpr String [Expr] Expr | IfExpr Expr Expr Expr | MapExpr String Expr | MapAssignExpr String Expr Expr | ListExpr String Expr | ListAssignExpr String Expr Expr | BinaryExpr BinaryOperator Expr Expr | UnaryExpr UnaryOperator Expr | CompareExpr CompareOperator Expr Expr
-  deriving (Show)
-
-data Literal = IntLit Integer | FloatLit Float | BoolLit Bool | AddressLit String
-  deriving (Show)
-
-data BinaryOperator = Plus | Minus | Times | Divide | And | Or | In
-  deriving (Show)
-
-data UnaryOperator = Not
-  deriving (Show)
-
-data CompareOperator = Less | Greater | LessEq | GreaterEq | Equal | NotEqual
-  deriving (Show)
-
-
-identifier :: Parser String
-identifier = trace "identifier" $ do
-    firstChar <- letter
-    rest <- many (letter <|> digit <|> char '.')
-    return (firstChar:rest)
-
-literalParser :: Parser Expr
-literalParser = do
-  try floatLiteralParser
-    <|> try intLiteralParser
-    <|> try boolLiteralParser
-    <|> try addressLiteralParser
-
-intLiteralParser :: Parser Expr
-intLiteralParser = do
-  n <- many1 digit
-  return (Literal (IntLit (read n)))
-
-boolLiteralParser :: Parser Expr
-boolLiteralParser = do
-  try (string "true" >> return (Literal (BoolLit True)))
-    <|> (string "false" >> return (Literal (BoolLit False)))
-
-addressLiteralParser :: Parser Expr
-addressLiteralParser = do
-  string "0x"
-  address <- count 40 (satisfy isHexDigit)
-  return (Literal (AddressLit address))
-
-floatLiteralParser :: Parser Expr
-floatLiteralParser = do
-  n <- many1 digit
-  char '.'
-  d <- many1 digit
-  return (Literal (FloatLit (read (n ++ "." ++ d))))
-
-isHexDigit :: Char -> Bool
-isHexDigit c = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+----------------------  state variables ------------------------------------
+----------------------------------------------------------------------------
 
 stateVariableParser :: Parser StateVariable
 stateVariableParser = try mapDeclParser
@@ -136,6 +76,14 @@ listDeclParser = do
   spaces
   ty <- listTypeParser
   return (ListDecl name ty)
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+
+
+
+---------------------- Type Parsers ----------------------------------------
+----------------------------------------------------------------------------
+
 
 --type parsers--
 dataTypeParser :: Parser DataType
@@ -157,7 +105,6 @@ intTypeParser = do
   string "int"
   return IntType
 
-
 boolTypeParser :: Parser DataType
 boolTypeParser = do
   string "bool"
@@ -173,7 +120,7 @@ listTypeParser = do
   char '['
   ty <- dataTypeParser
   char ']'
-  return (ListType [ty])
+  return (ListType ty)
 
 mapTypeParser :: Parser DataType
 mapTypeParser = do
@@ -190,20 +137,140 @@ stateTypeParser = do
     string "state"
     return StateType
 
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 
---expression parsers--
+parseString :: Parser Expr -> String -> Either ParseError Expr
+parseString e s = parse (e <* eof) "" s
 
-varExprParser :: Parser Expr
-varExprParser = trace "Variable" $ do
-  varName <- identifier
-  return (Var varName)
+parseFile :: FilePath -> IO (Either ParseError Contract)
+parseFile file = parseFromFile contractParser file
+
+
+---------------------- literal parsers ------------------------------------
+----------------------------------------------------------------------------
+
+
+literalParser :: Parser Expr
+literalParser = do
+    try addressLiteralParser
+    <|> try floatLiteralParser
+    <|> try intLiteralParser
+    <|> try boolLiteralParser
+
+intLiteralParser :: Parser Expr
+intLiteralParser = Literal . IntLit <$> integer
+
+boolLiteralParser :: Parser Expr
+boolLiteralParser = do
+  try (reserved "true" >> return (Literal (BoolLit True)))
+    <|> (reserved "false" >> return (Literal (BoolLit False)))
+
+addressLiteralParser :: Parser Expr
+addressLiteralParser = do
+  string "0x"
+  address <- count 40 (satisfy isHexDigit)
+  return (Literal (AddressLit address))
+
+floatLiteralParser :: Parser Expr
+floatLiteralParser = Literal . FloatLit <$> float
+
+isHexDigit :: Char -> Bool
+isHexDigit c = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
+
+
+
+----------------------- Expression Parsers ----------------------------------
+----------------------------------------------------------------------------
+
+
+binary s f assoc = Ex.Infix (reservedOp s *> spaces *> return (BinaryExpr f)) assoc
+
+
+table = [
+         [binary "*" Times Ex.AssocLeft,
+          binary "/" Divide Ex.AssocLeft]
+        ,[binary "+" Plus Ex.AssocLeft,
+          binary "-" Minus Ex.AssocLeft]
+        ,[binary "==" Equal Ex.AssocNone,
+          binary "<" Less Ex.AssocNone,
+          binary ">" Greater Ex.AssocNone,
+          binary "<=" LessEq Ex.AssocNone,
+          binary ">=" GreaterEq Ex.AssocNone]
+        ,[binary "&&" And Ex.AssocLeft,
+          binary "||" Or Ex.AssocLeft]
+        ,[binary ":=" StateVarAssign Ex.AssocNone]]
+
+opExpr :: Parser Expr
+opExpr = Ex.buildExpressionParser table (term <* spaces)
+
+expr :: Parser Expr
+expr = try mapAssignParser
+        <|> try listAssignParser
+        <|> try opExpr
+
+term :: Parser Expr
+term = try functionCallParser
+        <|> try mapAssignParser
+        <|> try listAssignParser
+        <|> try ifExprParser
+        <|> try mapExprParser
+        <|> try listExprParser
+        <|> try literalParser
+        <|> try variable
+        <|> parens opExpr
+
+ifExprParser :: Parser Expr
+ifExprParser = do
+  reserved "if"
+  cond <- expr
+  reserved "then"
+  thenExpr <- expr
+  reserved "else"
+  elseExpr <- expr
+  return (IfExpr cond thenExpr elseExpr)
+
+variable :: Parser Expr
+variable = do
+  var <- identifier
+  return $ Var var
+
+functionCallParser :: Parser Expr
+functionCallParser = do
+  functionName <- identifier
+  args <- (parens (commaSep variable))
+  return (FunctionCall functionName args)
+
+--works
+mapExprParser :: Parser Expr
+mapExprParser = do
+  name <- identifier
+  char '{'
+  key <- expr
+  char '}'
+  return (MapExpr name key)
+
+mapAssignParser :: Parser Expr
+mapAssignParser = do
+  name <- identifier
+  char '{'
+  key <- expr
+  char '}'
+  spaces
+  char '='
+  spaces 
+  val <- expr
+  return (MapAssignExpr name key val)
 
 --works
 listExprParser :: Parser Expr
 listExprParser = do
   name <- identifier
   char '['
-  index <- intLiteralParser
+  index <- expr
   char ']'
   return (ListExpr name index)
 
@@ -219,105 +286,16 @@ listAssignParser = do
   val <- literalParser
   return (ListAssignExpr name index val)
 
---works
-mapExprParser :: Parser Expr
-mapExprParser = trace "Hello" $ do
-  name <- identifier
-  char '{'
-  key <- exprParser
-  char '}'
-  trace "Map" $ return (MapExpr name key)
-
-mapAssignParser :: Parser Expr
-mapAssignParser = do
-  name <- identifier
-  char '{'
-  key <- exprParser
-  char '}'
-  spaces
-  char '='
-  spaces 
-  val <- exprParser
-  return (MapAssignExpr name key val)
-
---works
-exprParser :: Parser Expr
-exprParser = try functionExprParser
-           <|> try functionCallParser
-           <|> try ifExprParser
-           <|> try mapAssignParser
-           <|> try listAssignParser
-           <|> try listExprParser
-           <|> try mapExprParser
-           <|> try binaryExprParser
-           <|> try compareExprParser
-           <|> try unaryExprParser
-           <|> try varExprParser
-           <|> try literalParser
-
-
---works
-ifExprParser :: Parser Expr
-ifExprParser = do
-  trace "if" $ string "if"
-  spaces
-  condition <- try binaryExprParser <|> try literalParser <|> try unaryExprParser
-  newline
-  trace "then" $ string "then"
-  spaces
-  thenExpr <- try binaryExprParser <|> try literalParser <|> try unaryExprParser
-  newline
-  string "else"
-  spaces
-  elseExpr <- try binaryExprParser <|> try literalParser <|> try unaryExprParser
-  return (IfExpr condition thenExpr elseExpr)
-
---works
-binaryExprParser :: Parser Expr
-binaryExprParser = do
-    term <- try intLiteralParser <|> try floatLiteralParser <|> try varExprParser
-    spaces
-    rest <- many (do { op <- binaryOperatorParser; spaces; term <- try intLiteralParser <|> try floatLiteralParser <|> try varExprParser; spaces; return (op, term) } )
-    return $ foldl (\acc (op, term) -> BinaryExpr op acc term) term rest
-
---works
-unaryExprParser :: Parser Expr
-unaryExprParser = do
-  op <- unaryOperatorParser
-  e <- exprParser
-  return $ UnaryExpr op e
-
-compareExprParser :: Parser Expr
-compareExprParser = do
-    term <- try intLiteralParser <|> try floatLiteralParser <|> varExprParser
-    spaces
-    rest <- many (do { op <- compareOperatorParser; spaces; term <- try intLiteralParser <|> try floatLiteralParser <|> varExprParser; spaces; return (op, term) } )
-    return $ foldl (\acc (op, term) -> CompareExpr op acc term) term rest
-
-
-
-
-
---function parsers
---works
-functionCallParser :: Parser Expr
-functionCallParser = do
-  functionName <- identifier
-  char '('
-  args <- sepBy exprParser (char ',')
-  char ')'
-  return (FunctionCall functionName args)
-
 -- tested and works!
 functionExprParser :: Parser Expr
-functionExprParser = trace "start" $ do
+functionExprParser = do
   var <- identifier
   spaces
-  args <- sepEndBy (try varExprParser <|> try literalParser <|> try listExprParser <|> try mapExprParser) spaces
+  args <- sepEndBy expr spaces
   string "="
   spaces
-  expr <- exprParser
-  trace "got" $ return (FunctionExpr var args expr)
+  ex <- expr
+  return (FunctionExpr var args ex)
 
 --works
 functionSigParser :: Parser (String, [DataType], DataType)
@@ -340,39 +318,17 @@ functionParser = do
     skipMany (oneOf " \t\r\n")
     return (Function name inputTypes outputType expr)
 
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 
 
 
 
---operator parsers
-binaryOperatorParser :: Parser BinaryOperator
-binaryOperatorParser =
-  try (string "+" >> return Plus)
-  <|> try (string "-" >> return Minus)
-  <|> try (string "*" >> return Times)
-  <|> try (string "/" >> return Divide)
-  <|> try (string "and" >> return And)
-  <|> try (string "or" >> return Or)
-  <|> try (string "in" >> return In)
-
-unaryOperatorParser :: Parser UnaryOperator
-unaryOperatorParser =
-  try (string "!" >> return Not)
-
-compareOperatorParser :: Parser CompareOperator
-compareOperatorParser = do
-    try (string "<" >> return Less)
-    <|> try (string ">" >> return Greater)
-    <|> try (string "==" >> return Equal)
-    <|> try (string "<=" >> return LessEq)
-    <|> try (string ">=" >> return GreaterEq)
-    <|> try (string "!=" >> return NotEqual)
-
-
-
+---------------------- Contract Parsers ------------------------------------
+----------------------------------------------------------------------------
 contractParser :: Parser Contract
-contractParser = trace "Contract" $ do
-  string "contract"
+contractParser = do
+  reserved "fafel"
   spaces
   contractName <- identifier
   spaces
@@ -383,26 +339,16 @@ contractParser = trace "Contract" $ do
   functions <- manyTill functionParser (string "}")
   return (Contract contractName stateVars functions)
 
---works
+
+
+
 stateParser :: Parser [StateVariable]
-stateParser = trace "State" $ do
-  string "state"
-  spaces
-  char '{'
-  newline
-  stateVars <- sepEndBy stateVariableParser (newline)
-  trace "Success" $ skipMany (oneOf " \n\t\r")
-  char '}'
-  trace "State Parsed" $ return stateVars
+stateParser = do
+    reserved "state"
+    whitespace
+    stateVars <- braces (sepEndBy stateVariableParser newline)
+    return (stateVars)
 
---works
+----------------------------------------------------------------------------
+----------------------------------------------------------------------------
 
-
-
-
---main :: IO ()
---main = do
---    contents <- readFile "example.fafel"
---    case parse contractParser "example.fafel" contents of
---        Left error -> print error
---        Right ast -> print ast
