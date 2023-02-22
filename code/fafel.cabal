@@ -1,19 +1,19 @@
 cabal-version:      2.4
-name:               code
-version:            0.1.0.0
+name:               fafel 
+version:            0.1.0
 
 -- A short (one-line) description of the package.
--- synopsis:
+synopsis:          A compiler for the Fafel language
 
 -- A longer description of the package.
--- description:
+description: First generation compiler for the Fafel language
 
 -- A URL where users can report bugs.
 -- bug-reports:
 
 -- The license under which the package is released.
 -- license:
-author:             Senan Warnock
+author:             Senan Warnock, Zak Smith
 maintainer:         senan.warnock2@mail.dcu.ie
 
 -- A copyright notice.
@@ -21,14 +21,14 @@ maintainer:         senan.warnock2@mail.dcu.ie
 -- category:
 extra-source-files: CHANGELOG.md
 
-executable code
+executable fafel
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules: AST Parser Lexer Codegen 
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.16.4.0, parsec
+    build-depends:    base ^>=4.16.4.0, parsec, containers, split, mtl, cryptonite, bytestring, base16-bytestring
     hs-source-dirs:   app
     default-language: Haskell2010
