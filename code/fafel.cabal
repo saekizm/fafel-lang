@@ -25,10 +25,10 @@ executable fafel
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    other-modules: AST Parser Lexer Codegen 
+    other-modules: AST Parser Lexer Codegen  TypeChecker
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
-    build-depends:    base ^>=4.16.4.0, parsec, containers, split, mtl, cryptonite, bytestring, base16-bytestring
+    build-depends:    base ^>=4.16.4.0, parsec, process, containers, split, mtl, cryptonite, bytestring, base16-bytestring
     hs-source-dirs:   app
     default-language: Haskell2010

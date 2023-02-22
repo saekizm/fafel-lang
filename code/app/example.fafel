@@ -1,4 +1,4 @@
-contract myContract {
+fafel myContract {
 state {
 value : int
 myList : [int]
