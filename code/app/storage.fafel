@@ -1,0 +1,17 @@
+fafel storage {
+state {
+number : int
+}
+
+getNum : () -> int
+getNum = number
+
+ifNum : (int) -> int
+ifNum x = if (x > number) then 2 else 1
+
+ifNam : (int) -> bool
+ifNam x = if (x > number && 2 == 2) then true else false
+
+setNum : (int) -> state
+setNum x = number := number + x
+}
