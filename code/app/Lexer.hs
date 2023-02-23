@@ -22,7 +22,7 @@ contractLanguage = emptyDef {
     Tok.identStart = letter,
     Tok.identLetter = alphaNum,
     Tok.reservedNames = ["fafel", "state", "true", "false", "if", "then", "else"],
-    Tok.reservedOpNames = ["+", "-", "*", "/", "and", "or", "not", "<", ">", "<=", ">=", "==", "!=", "="],
+    Tok.reservedOpNames = ["+", "-", "*", "/", "and", "or", "<", ">", "<=", ">=", "==", "!=", ":="],
     Tok.caseSensitive = True
 }
 

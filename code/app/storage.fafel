@@ -1,6 +1,6 @@
 fafel storage {
-state {
-number : int
+    state {
+        number : int
 }
 
 getNum : () -> int
@@ -10,6 +10,7 @@ ifNum : (int) -> int
 ifNum x = if (x > number) then 2 else 1
 
 ifNam : (int) -> bool
+-- if function
 ifNam x = if (x > number && 2 == 2) then true else false
 
 setNum : (int) -> state

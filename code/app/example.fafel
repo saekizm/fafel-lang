@@ -1,9 +1,9 @@
 fafel myContract {
-state {
-value : int
-myList : [int]
-mymap : mapping(int->int)
-myMap2 : mapping(int->int)
+    state {
+        value : int
+        myList : [int]
+        mymap : mapping(int->int)
+        myMap2 : mapping(int->int)
 }
 
 

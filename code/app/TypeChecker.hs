@@ -72,7 +72,7 @@ typecheckFunction (Function name argTypes ret body) = do
             res <- typecheckExpr body
             if res == Right ret
                 then return (Right ret)
-                else return (Left "Type error")
+                else return (Left $ name ++ " function body does not match return type")
 
 typecheckExpr :: Expr -> FafelState Result
 typecheckExpr (FunctionCall name args) = do
@@ -182,7 +182,6 @@ typecheckExpr (BinaryExpr op e1 e2) = do
                 (Right IntType, Right IntType) -> return (Right BoolType)
                 (Right FloatType, Right FloatType) -> return (Right BoolType)
                 _ -> return (Left "Type error")
-        _ -> return (Left "Type error")
 typecheckExpr (MapAssignExpr mapName key value) = return $ Right StateType
 typecheckExpr (ListAssignExpr listName index value) = return $ Right StateType
 typecheckExpr (Var name) = do
@@ -200,7 +199,7 @@ typecheckExpr (MapExpr name key) = do
         Just (Left ty) -> do
             case ty of
                 MapType (keyType, valueType) -> return (Right valueType)
-                _ -> return (Left "Type error")
+                _ -> return (Left "No MapType error")
         Nothing -> return (Left "Variable not found")
 typecheckExpr (ListExpr name index) = do
     sym <- get
@@ -208,7 +207,7 @@ typecheckExpr (ListExpr name index) = do
         Just (Left ty) -> do
             case ty of
                 ListType valueType -> return (Right valueType)
-                _ -> return (Left "Type error")
+                _ -> return (Left "No ListType error")
         Nothing -> return (Left "Variable not found")
 typecheckExpr (IfExpr condExpr thenExpr elseExpr) = do
     condType <- typecheckExpr condExpr
@@ -218,8 +217,8 @@ typecheckExpr (IfExpr condExpr thenExpr elseExpr) = do
         (Right BoolType, Right thenType, Right elseType) -> do
             if thenType == elseType
                 then return (Right thenType)
-                else return (Left "Type error")
-        _ -> return (Left "Type error")
+                else return (Left "then and else type error")
+        _ -> return (Left "If expresssion type error")
 typecheckExpr (Literal n) = typecheckLiteral n
 
 typecheckLiteral :: Literal -> FafelState Result
@@ -234,5 +233,6 @@ typecheckContract (Contract name vars funcs) = do
     insertFunctions funcs
     functionChecks <- mapM typecheckFunction funcs
     if all isRight functionChecks
-        then return $ (show functionChecks)
-        else return $ (show functionChecks)
+        then return $ "True"
+        -- return a string of all the errors which are lefts
+        else return $ (show $ lefts functionChecks)

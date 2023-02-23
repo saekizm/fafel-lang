@@ -30,7 +30,12 @@ main = do
         Right result -> do
             writeFile "AST.txt" $ show result
             res <- evalStateT (typecheckContract result) Map.empty
-            putStrLn $ "Type checking: " ++ res
+            case res of
+              "True" -> putStrLn "Typechecking successful"
+              -- stop if typechecking fails
+              _ -> do
+                putStrLn $ "Typechecking failed" ++ res
+                exitFailure
             (output, _) <- runStateT (genYulContract result) initialSymbolTable
             writeFile "contract.yul" output
             (_, stdout, stderr) <- readProcessWithExitCode "solc" ["--yul", "contract.yul", "--bin"] ""

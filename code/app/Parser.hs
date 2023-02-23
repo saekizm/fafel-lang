@@ -313,7 +313,7 @@ functionSigParser = do
 functionParser :: Parser Function
 functionParser = do
     (name, inputTypes, outputType) <- functionSigParser
-    newline
+    whitespace
     expr <- functionExprParser
     skipMany (oneOf " \t\r\n")
     return (Function name inputTypes outputType expr)
@@ -333,7 +333,7 @@ contractParser = do
   contractName <- identifier
   spaces
   char '{'
-  newline
+  whitespace
   stateVars <- stateParser
   skipMany (oneOf " \n\t\r")
   functions <- manyTill functionParser (string "}")
@@ -346,7 +346,7 @@ stateParser :: Parser [StateVariable]
 stateParser = do
     reserved "state"
     whitespace
-    stateVars <- braces (sepEndBy stateVariableParser newline)
+    stateVars <- braces (sepEndBy stateVariableParser whitespace)
     return (stateVars)
 
 ----------------------------------------------------------------------------
