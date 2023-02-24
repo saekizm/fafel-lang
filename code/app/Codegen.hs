@@ -27,6 +27,7 @@ import qualified Data.ByteString.Base16 as B16
 type SymbolTable = Map String Int
 type FafelState a = StateT SymbolTable IO a
 
+-- symbol table stuff -----------------------------------------------------------
 initialSymbolTable :: SymbolTable
 initialSymbolTable = Map.empty
 
@@ -46,6 +47,10 @@ lookupInSymbolTable name = do
     sym <- get
     return $ Map.lookup name sym
 
+--------------------------------------------------------------------------------
+
+
+-- generate a literal
 genYulLit :: Literal -> FafelState String
 genYulLit (IntLit s) = return $ show $ s * 1000000000000000000
 genYulLit (FloatLit s) = return $ (show $ fst s) ++ (show $ snd s) ++ replicate (18 - length (show $ snd s)) '0'
@@ -53,6 +58,7 @@ genYulLit (BoolLit True) = return $ "1"
 genYulLit (BoolLit False) = return $ "0"
 genYulLit (AddressLit s) = return $ "0x" ++ s
 
+-- generate a binary operation
 genYulBinaryOp :: BinaryOperator -> FafelState String
 genYulBinaryOp Plus = return $ "add"
 genYulBinaryOp Minus = return $ "sub"
@@ -68,6 +74,7 @@ genYulBinaryOp GreaterEq = return $ "ge"
 genYulBinaryOp Equal = return $ "eq"
 genYulBinaryOp NotEqual = return $ "ne"
 
+-- generate a yul expression
 genYulExpr :: Expr -> FafelState String
 genYulExpr (FunctionCall n a) = genYulFuncCall (FunctionCall n a)
 genYulExpr (BinaryExpr op e1 e2) = genYulBinaryExpr (BinaryExpr op e1 e2)
@@ -80,11 +87,13 @@ genYulExpr (MapAssignExpr name key val) = genYulMappingAssign (MapAssignExpr nam
 genYulExpr (ListExpr name index) = genYulListExpr (ListExpr name index)
 genYulExpr (ListAssignExpr name index val) = genYulListAssign (ListAssignExpr name index val)
 
+-- wrap in a result
 genYulWrapper :: Expr -> FafelState String
 genYulWrapper expr = do
     expr' <- genYulExpr expr
     return $ "result := " ++ expr'
 
+-- generate a binary expression in Yul.
 genYulBinaryExpr :: Expr -> FafelState String
 genYulBinaryExpr (BinaryExpr op e1 e2) = do
   e1' <- genYulExpr e1
@@ -99,17 +108,19 @@ genYulBinaryExpr (BinaryExpr op e1 e2) = do
       op' <- genYulBinaryOp op
       return $ op' ++ "(" ++ e1' ++ ", " ++ e2' ++ ")"
 
+
+-- get variable name
 getVarName :: Expr -> String
 getVarName (Var name) = name
 
+-- This function generates the corresponding Yul code for a function call
 genYulFuncCall :: Expr -> FafelState String
 genYulFuncCall (FunctionCall name args) = do
     args' <- mapM genYulExpr args
     return $ name ++ "(" ++ intercalate ", " args' ++ ")"
 
 
---genYulIfExpr :: Expr -> String
-
+-- This function generates the corresponding Yul code for a variable.
 genYulVar :: Expr -> FafelState String
 genYulVar (Var name) = do
     check <- lookupInSymbolTable name
@@ -117,6 +128,7 @@ genYulVar (Var name) = do
         Just check -> return $ "sload(" ++ show check ++ ")"
         Nothing -> return $ name
 
+-- This function generates the correspondig Yul code for a state variable.
 genYulStateVariable :: StateVariable -> FafelState String
 genYulStateVariable (MapDecl name ty) =
     storeMapping (MapDecl name ty)
@@ -159,20 +171,21 @@ storeAddress (AddressDecl name ty) = do
     addToSymbolTable name slot
     return $ "sstore(" ++ show slot ++ ", 0)\n"
 
+-- store list index in storage
 storeList :: StateVariable -> FafelState String
 storeList (ListDecl name val) = do
     slot <- getSlot
     addToSymbolTable name slot
     return $ "sstore(" ++ show slot ++ ", 0)\n"
 
-
+-- store mapping index in storage
 storeMapping :: StateVariable -> FafelState String
 storeMapping (MapDecl name ty) = do
     slot <- getSlot
     addToSymbolTable name slot
     return $ "sstore(" ++ show slot ++ ", 0)\n"
 
-
+-- generate yul contract
 genYulContract :: Contract -> FafelState String
 genYulContract (Contract name stateVariables functions) = do
     stateVars <- mapM genYulStateVariable stateVariables
@@ -189,6 +202,7 @@ functionSelector (Function name args returnType expr) = do
     let hash = if null args then keccak256Hex $ name else keccak256Hex $ name ++ "(" ++ (intercalate "," (map show args)) ++ ")"
     return (name, show args, "0x" ++ take 8 hash)
 
+-- generate function selector for calling functions
 genYulFunctionSelector :: (String, String, String) -> FafelState String
 genYulFunctionSelector (name, args, hash) = do
     let argList = if args == "[]" then [] else splitOn "," args
@@ -208,6 +222,7 @@ genYulFunction (Function name _ returnType expr) = do
             expr' <- genYulFunctionExpr expr
             return $ "function " ++ name ++ "(" ++ expr'
 
+-- generate function expression
 genYulFunctionExpr :: Expr -> FafelState String
 genYulFunctionExpr (FunctionExpr name args expr@(Var s)) = do
     args' <- mapM genYulExpr args
@@ -238,6 +253,7 @@ genYulFunctionExpr' (FunctionExpr name args expr) = do
     expr' <- genYulExpr expr
     return $ (intercalate ", " args') ++ ") -> result " ++ "{ \n" ++ expr' ++ "\nresult := 0\n}\n"
 
+-- generate if expression
 genYulIfExpr :: Expr -> FafelState String
 genYulIfExpr (IfExpr cond thenExpr elseExpr) = do
     cond' <- genYulExpr cond
@@ -245,6 +261,7 @@ genYulIfExpr (IfExpr cond thenExpr elseExpr) = do
     elseExpr' <- genYulExpr elseExpr
     return $ "switch " ++ cond' ++ "\ncase true { result := " ++ thenExpr' ++ " } \ndefault { result := " ++ elseExpr' ++ " }\n"
 
+-- generate mapping expression
 genYulMappingExpr :: Expr -> FafelState String
 genYulMappingExpr (MapExpr name key) = do
     slot <- lookupInSymbolTable name
@@ -253,6 +270,7 @@ genYulMappingExpr (MapExpr name key) = do
         Just slot -> return $ "\n        mstore(0x00, " ++ show slot ++ ")\n        mstore(0x20, " ++ key' ++ ")\n" ++ "        result := sload(keccak256(0x00, 0x40))"
         Nothing -> return $ error $ "Error: " ++ name ++ " not found in symbol table."
 
+-- generate map assignment expression
 genYulMappingAssign :: Expr -> FafelState String
 genYulMappingAssign (MapAssignExpr name key val) = do
     slot <- lookupInSymbolTable name
@@ -262,6 +280,7 @@ genYulMappingAssign (MapAssignExpr name key val) = do
         Just slot -> return $ "\n        mstore(" ++ "0x00, " ++ show slot ++ ")\n        mstore(0x40, " ++ key' ++ ")\n        sstore(keccak256(0x00, 0x60), " ++ val' ++ ")\n\n"
         Nothing -> return $ error $ "Error: " ++ name ++ " not found in symbol table."
 
+-- generate list expression
 genYulListExpr :: Expr -> FafelState String
 genYulListExpr (ListExpr name index) = do
     slot <- lookupInSymbolTable name
@@ -270,6 +289,8 @@ genYulListExpr (ListExpr name index) = do
         Just slot -> return $ "\n        mstore(0x00, " ++ show slot ++ ")\n        result := sload(add(keccak256(0x00, 0x20), " ++ index' ++ "))"
         Nothing -> return $ error $ "Error: " ++ name ++ " not found in symbol table."
 
+
+-- generate list assignment expression
 genYulListAssign :: Expr -> FafelState String
 genYulListAssign (ListAssignExpr name index value) = do
     slot <- lookupInSymbolTable name
@@ -278,5 +299,6 @@ genYulListAssign (ListAssignExpr name index value) = do
         Just slot -> return $ "\n        mstore(" ++ "0x40, " ++ show slot ++ ")\n        \n        sstore(keccak256(0x40, 0x80), " ++ val' ++ ")\n"
         Nothing -> return $ error $ "Error: " ++ name ++ " not found in symbol table."
 
+-- helper hash function
 keccak256Hex :: String -> String
 keccak256Hex s = show (hash (C8.pack s) :: Digest Keccak_256)
