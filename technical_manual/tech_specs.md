@@ -26,9 +26,9 @@ The goal of this document is to provide a comprehensive and accurate specificati
 
 ## Blockchain Basics
 
-The blockchain can be seen as a digital ledger, it is similar to a traditional ledger used in banks in how it records the sender and receiver. However it does this in a secure decentralised way without the need for a middleman. This can allow a network to be completly transparent showing all transactions, preventing fraud. A transaction also cannot be deleted on the blockchain once it has been recorded.
+The blockchain can be seen as a digital ledger, it is similar to a traditional ledger used in banks in how it records the sender and receiver. However, it does this in a secure decentralised way without the need for a middleman. This can allow a network to be completely transparent showing all transactions, and preventing fraud. A transaction also cannot be deleted on the blockchain once it has been recorded.
 
-## The Etherium Virtual Machine (EVM)
+## The Ethereum Virtual Machine (EVM)
 
 The Ethereum Virtual Machine (EVM) operates at runtime and provides a platform for smart contracts to execute in the Ethereum Network. It is completely separate from the Ethereum Network meaning the programmes and code running inside the EVM have no access to the network. Smart contracts are written by developers on the EVM as it allows them to be run securely on the Ethereum Network, Transactions will execute predictably without the need for a middleman.
 
