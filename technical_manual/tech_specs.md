@@ -467,3 +467,5 @@ Fafel is similar to Haskell, while Solidity is more akin to C++ or Javascript.
 This was an immensely challenging, yet rewarding project. We don't consider Fafel to be complete in any sense. We mean to say, Fafel will be constantly improving as time goes by and we can add more features to the language. In it's current implementation, fafel is really just a very basic programming language.
 
 Learning about how compilers work to translate source code, and how the EVM and Yul work has been a challenge, but we have learned a lot of useful techniques and tricks. Even using Haskell, even though we started learning this language this year, it still had a learning curve for writing Fafel, making use of monads and other features.
+
+Goals for the future of Fafel include refactoring weak code, seeing what other features are possible, like calling other contracts and implementing more complex expressions.
