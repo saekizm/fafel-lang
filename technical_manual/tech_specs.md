@@ -241,29 +241,29 @@ Yul is a useful intermediate language that is compiled to bytecode for backends.
 
 The Lexer.hs file contains the implementation of the lexical analyzer for the Fafel programming language. It provides a set of functions to tokenize the input source code and generate a stream of tokens to be used by the parser. Here is the functional decomposition of Lexer.hs:
 
-* contractLanguage: This function defines the language specification for Fafel. It specifies the comment start, comment end, comment line, identifier start, identifier letter, reserved names, reserved operator names, and case sensitivity for the language.
+* `contractLanguage`: This function defines the language specification for Fafel. It specifies the comment start, comment end, comment line, identifier start, identifier letter, reserved names, reserved operator names, and case sensitivity for the language.
 
-* lexer: This function generates a lexical analyzer for Fafel using the language specification provided by contractLanguage. It generates a TokenParser object which provides a set of functions to tokenize the input source code.
+* `lexer`: This function generates a lexical analyzer for Fafel using the language specification provided by contractLanguage. It generates a TokenParser object which provides a set of functions to tokenize the input source code.
 
-* integer: This function parses an integer token using the TokenParser provided by lexer.
+* `integer`: This function parses an integer token using the TokenParser provided by lexer.
 
-* float: This function parses a float token using the TokenParser provided by lexer. It returns a tuple of two integers representing the numerator and denominator of the fraction.
+* `float`: This function parses a float token using the TokenParser provided by lexer. It returns a tuple of two integers representing the numerator and denominator of the fraction.
 
-* parens: This function parses a token surrounded by parentheses using the TokenParser provided by lexer.
+* `parens`: This function parses a token surrounded by parentheses using the TokenParser provided by lexer.
 
-* commaSep: This function parses a comma-separated list of tokens using the TokenParser provided by lexer.
+* `commaSep`: This function parses a comma-separated list of tokens using the TokenParser provided by lexer.
 
-* semiSep: This function parses a semicolon-separated list of tokens using the TokenParser provided by lexer. It returns a list of parsed tokens.
+* `semiSep`: This function parses a semicolon-separated list of tokens using the TokenParser provided by lexer. It returns a list of parsed tokens.
 
-* identifier: This function parses an identifier token using the TokenParser provided by lexer.
+* `identifier`: This function parses an identifier token using the TokenParser provided by lexer.
 
-* reserved: This function parses a reserved keyword token using the TokenParser provided by lexer.
+* `reserved`: This function parses a reserved keyword token using the TokenParser provided by lexer.
 
-* reservedOp: This function parses a reserved operator token using the TokenParser provided by lexer.
+* `reservedOp`: This function parses a reserved operator token using the TokenParser provided by lexer.
 
-* whitespace: This function parses whitespace using the TokenParser provided by lexer.
+* `whitespace`: This function parses whitespace using the TokenParser provided by lexer.
 
-* braces: This function parses a token surrounded by braces using the TokenParser provided by lexer.
+* `braces`: This function parses a token surrounded by braces using the TokenParser provided by lexer.
 
 The functions defined in Lexer.hs work together to generate a stream of tokens from the input source code. These tokens are then used by the parser to generate an abstract syntax tree.
 
@@ -273,7 +273,7 @@ This module is used to parse Fafel source code into an AST. The Parser module ha
 
 Functions:
 
-* stateVariableParser: This function takes a string as input and returns a StateVariable as output. It tries to parse different types of StateVariable in a specific order of precedence:
+* `stateVariableParser`: This function takes a string as input and returns a StateVariable as output. It tries to parse different types of StateVariable in a specific order of precedence:
 
 ```
   - mapDeclParser
@@ -287,26 +287,19 @@ Functions:
 
 If none of these parsers match, it returns a parser error.
 
-intDeclParser:
-This function takes a string as input and returns an IntDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and an intTypeParser. Then it returns an IntDecl with the name of the variable and its type.
+`intDeclParser`: This function takes a string as input and returns an IntDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and an intTypeParser. Then it returns an IntDecl with the name of the variable and its type.
 
-floatDeclParser:
-This function takes a string as input and returns a FloatDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a floatTypeParser. Then it returns a FloatDecl with the name of the variable and its type.
+`floatDeclParser`: This function takes a string as input and returns a FloatDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a floatTypeParser. Then it returns a FloatDecl with the name of the variable and its type.
 
-boolDeclParser:
-This function takes a string as input and returns a BoolDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a boolTypeParser. Then it returns a BoolDecl with the name of the variable and its type.
+`boolDeclParser`: This function takes a string as input and returns a BoolDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a boolTypeParser. Then it returns a BoolDecl with the name of the variable and its type.
 
-addressDeclParser:
-This function takes a string as input and returns an AddressDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and an addressTypeParser. Then it returns an AddressDecl with the name of the variable and its type.
+`addressDeclParser`: This function takes a string as input and returns an AddressDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and an addressTypeParser. Then it returns an AddressDecl with the name of the variable and its type.
 
-mapDeclParser:
-This function takes a string as input and returns a MapDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a mapTypeParser. Then it returns a MapDecl with the name of the variable and its type.
+`mapDeclParser`: This function takes a string as input and returns a MapDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a mapTypeParser. Then it returns a MapDecl with the name of the variable and its type.
 
-listDeclParser:
-This function takes a string as input and returns a ListDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a listTypeParser. Then it returns a ListDecl with the name of the variable and its type.
+`listDeclParser`: This function takes a string as input and returns a ListDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a listTypeParser. Then it returns a ListDecl with the name of the variable and its type.
 
-dataTypeParser:
-This function takes a string as input and returns a DataType as output. It tries to parse different types of DataType in a specific order of precedence:
+`dataTypeParser`: This function takes a string as input and returns a DataType as output. It tries to parse different types of DataType in a specific order of precedence:
 
 ```
   - stateTypeParser
@@ -321,76 +314,75 @@ This function takes a string as input and returns a DataType as output. It tries
 
 If none of these parsers match, it returns a parser error.
 
-floatTypeParser:
+`floatTypeParser`:
 This function takes a string as input and returns a FloatType as output. It parses the string "float".
 
-intTypeParser:
+`intTypeParser`:
 This function takes a string as input and returns an IntType as output. It parses the string "int".
 
-boolTypeParser:
+`boolTypeParser`:
 This function takes a string as input and returns a BoolType as output. It parses the string "bool".
 
-addressTypeParser:
+`addressTypeParser`:
 This function takes a string as input and returns an AddressType as output. It parses the string "address".
 
-listTypeParser:
+`listTypeParser`:
 This function takes a string as input and returns a ListType as output. It parses a string that starts with an open square bracket, followed by a dataTypeParser, and ends with a closing square bracket. Then it returns a ListType.
 
-mapTypeParser:
+`mapTypeParser`:
 This function takes a string as input and returns a MapType as output. It parses a string that starts with the word `mapping` followed by opening parentheses, then parses the data type, a string `->`, another data type is parsed, and then we finish by parsing the closing parentheses.
 
-stateTypeParser:
+`stateTypeParser`:
 This function takes a string as input and returns a StateType as output. It parses the string "state".
 
-literalParser:
+`literalParser`:
 This parser tries to parse an expression from four different possible literal values: address, float, integer, and boolean. It uses the try parser combinator to attempt each literal in order.
 
-intLiteralParser:
+`intLiteralParser`:
 This parser specifically parses integer literals, creating an IntLit Literal expression using the integer parser.
 
-boolLiteralParser:
+`boolLiteralParser`:
 This parser specifically parses boolean literals, creating a BoolLit Literal expression using the reserved parser and returning a Literal expression.
 
-addressLiteralParser:
+`addressLiteralParser`:
 This parser specifically parses hexadecimal address literals, creating an AddressLit Literal expression using the count and satisfy parsers.
 
-floatLiteralParser:
+`floatLiteralParser`:
 This parser specifically parses floating point number literals, creating a FloatLit Literal expression using the float parser.
 
-binary s f assoc = Ex.Infix (reservedOp s *> spaces *> return (BinaryExpr f)) assoc
-This is a helper function for constructing a binary operator expression parser. It takes a string s representing the operator symbol, a binary operator function f, and an associativity assoc value. It constructs an infix parser using the reservedOp parser, and returns a BinaryExpr expression.
+`binary s f assoc = Ex.Infix (reservedOp s *> spaces *> return (BinaryExpr f)) assoc`: This is a helper function for constructing a binary operator expression parser. It takes a string s representing the operator symbol, a binary operator function f, and an associativity assoc value. It constructs an infix parser using the reservedOp parser, and returns a BinaryExpr expression.
 
-table
+`table`
 This is a list of lists of operator parsers, representing the precedence levels and associativity of the different binary operators in the language. Each inner list contains parsers for operators with the same precedence level.
 
-opExpr:
+`opExpr`:
 This is a parser for general operator expressions, which uses Ex.buildExpressionParser to parse expressions based on the precedence and associativity defined in table. It uses the term parser as a base, and then applies the table of binary operator parsers to build up the expression.
 
-expr:
+`expr`:
 This parser attempts to parse different types of expressions in order: map assignment, list assignment, operator expressions, and literal expressions. If none of these parsers succeed, it attempts to parse a variable or an expression inside parentheses.
 
-term:
+`term`:
 This parser attempts to parse different types of term expressions in order: function calls, map expressions, list expressions, if expressions, map assignments, literal expressions, variables, and expressions inside parentheses.
 
-ifExprParser:
+`ifExprParser`:
 This parser specifically parses if-else expressions, using the reserved parser to match the keywords and returning an IfExpr expression.
 
-variable:
+`variable`:
 This parser specifically parses variable expressions, using the identifier parser to match the variable name and returning a Var expression.
 
-functionCallParser:
+`functionCallParser`:
 This parser specifically parses function call expressions, using the identifier parser to match the function name and the parens and commaSep parsers to match the argument list.
 
-mapExprParser:
+`mapExprParser`:
 This parser specifically parses map expressions, using the identifier, char, and expr parsers to match the map name and key expression.
 
-mapAssignParser:
+`mapAssignParser`:
 This parser specifically parses map assignment expressions, using the identifier, char, expr, spaces, and = parsers to match the map name, key expression, and value expression.
 
-listExprParser: 
+`listExprParser`: 
 This parser specifically parses list expressions, using the identifier, char, and expr parsers to match the list name and index expression.
 
-listAssignParser:
+`listAssignParser`:
 This parser specifically parses list assignment expressions, using the identifier, brackets, expr, spaces, and = parsers to match the list name, index expression, and value expression. It creates a ListAssignExpr expression.
 
 #### TypeChecker
@@ -418,25 +410,25 @@ The Codegen module provides a way to generate Yul code from an AST. It includes 
 
 The functions included in the module are:
 
-* initialSymbolTable: returns an empty symbol table.
-* getSlot: gets the next available slot in memory.
-* addToSymbolTable: adds a variable name and its slot to the symbol table.
-* lookupInSymbolTable: looks up a variable name in the symbol table and returns its slot, if it exists.
-* genYulLit: generates Yul code for a literal.
-* genYulBinaryOp: generates Yul code for a binary operator.
-* genYulExpr: generates Yul code for an expression.
-* genYulWrapper: generates a Yul code wrapper for an expression.
-* genYulBinaryExpr: generates Yul code for a binary expression.
-* getVarName: gets the variable name from a variable expression.
-* genYulFuncCall: generates Yul code for a function call.
-* genYulVar: generates Yul code for a variable.
-* genYulStateVariable: generates Yul code for a state variable.
-* genYulIfExpr: generates Yul code for an if expression.
-* genYulFunctionExpr: generates Yul code for a function expression.
-* genYulMappingExpr: generates Yul code for a mapping expression.
-* genYulMappingAssign: generates Yul code for a mapping assignment.
-* genYulListExpr: generates Yul code for a list expression.
-* genYulListAssign: generates Yul code for a list assignment.
+* `initialSymbolTable`: returns an empty symbol table.
+* `getSlot`: gets the next available slot in memory.
+* `addToSymbolTable`: adds a variable name and its slot to the symbol table.
+* `lookupInSymbolTable`: looks up a variable name in the symbol table and returns its slot, if it exists.
+* `genYulLit`: generates Yul code for a literal.
+* `genYulBinaryOp`: generates Yul code for a binary operator.
+* `genYulExpr`: generates Yul code for an expression.
+* `genYulWrapper`: generates a Yul code wrapper for an expression.
+* `genYulBinaryExpr`: generates Yul code for a binary expression.
+* `getVarName`: gets the variable name from a variable expression.
+* `genYulFuncCall`: generates Yul code for a function call.
+* `genYulVar`: generates Yul code for a variable.
+* `genYulStateVariable`: generates Yul code for a state variable.
+* `genYulIfExpr`: generates Yul code for an if expression.
+* `genYulFunctionExpr`: generates Yul code for a function expression.
+* `genYulMappingExpr`: generates Yul code for a mapping expression.
+* `genYulMappingAssign`: generates Yul code for a mapping assignment.
+* `genYulListExpr`: generates Yul code for a list expression.
+* `genYulListAssign`: generates Yul code for a list assignment.
 
 #### Main
 
