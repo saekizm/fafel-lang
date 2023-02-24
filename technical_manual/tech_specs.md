@@ -13,18 +13,29 @@ This document assumes a basic understanding of functional programming concepts a
 
 The remainder of this document is organized as follows:
 
-* Section 1 provides an overview of the Fafel language and its design goals.
-* Section 2 defines the syntax and grammar of the Fafel language.
-* Section 3 describes the semantics of the Fafel language, including its evaluation rules and operational semantics.
-* Section 4 specifies the type system of Fafel, including the built-in types and functions and the rules for type checking and type inference.
-* Section 5 explains the compilation process from Fafel to Yul, including the intermediate representations used and the optimizations applied.
-* Section 6 provides examples of Fafel code and their corresponding Yul code to illustrate the translation process and the features of the language.
-* Section 7 lists the differences between Fafel and Solidity, as well as the limitations of the language and the future work planned.
+* Section 1 explains Smart Contract Basics 
+* Section 2 provides an overview of the Fafel language and its design goals.
+* Section 3 defines the syntax and grammar of the Fafel language.
+* Section 4 describes the semantics of the Fafel language, including its evaluation rules and operational semantics.
+* Section 5 specifies the type system of Fafel, including the built-in types and functions and the rules for type checking and type inference.
+* Section 6 explains the compilation process from Fafel to Yul, including the intermediate representations used and the optimizations applied.
+* Section 7 provides examples of Fafel code and their corresponding Yul code to illustrate the translation process and the features of the language.
+* Section 8 lists the differences between Fafel and Solidity, as well as the limitations of the language and the future work planned.
 
 The goal of this document is to provide a comprehensive and accurate specification of the Fafel language, to enable developers to write secure and efficient smart contracts for the EVM, and to foster the growth of the Fafel community and ecosystem.
 
 
 ## Blockchain Basics
+
+The blockchain can be seen as a digital ledger, it is similar to a traditional ledger used in banks in how it records the sender and receiver. However it does this in a secure decentralised way without the need for a middleman. This can allow a network to be completly transparent showing all transactions, preventing fraud. A transaction also cannot be deleted on the blockchain once it has been recorded.
+
+## The Etherium Virtual Machine (EVM)
+
+The Ethereum Virtual Machine (EVM) operates at runtime and provides a platform for smart contracts to execute in the Ethereum Network. It is completely separate from the Ethereum Network meaning the programmes and code running inside the EVM have no access to the network. Smart contracts are written by developers on the EVM as it allows them to be run securely on the Ethereum Network, Transactions will execute predictably without the need for a middleman.
+
+## The Storage and Memory for the EVM
+
+The EVM is run on a stack making it a "Stack Machine". A stack can be considered a pile of books, you can only take the book on top and add new books to the top. This is how the EVM utilises a stack to keep track of code/instructions that need to be executed for a smart contract. When an instruction is pushed to the top of a stack the EVM will perform the set of instructions and pop it off the stack. The minimal approach is used for consistency and to avoid incorrect implementations. The stack has a size of 1024 elements containing 256 bits. 
 
 ## Overview
 
@@ -47,6 +58,31 @@ Fafel is a statically typed language, meaning that the types of expressions and 
 Fafel is compiled to Yul, which is a low-level intermediate language for the EVM. Yul is a stack-based language that is similar in syntax to assembly language, but with higher-level constructs such as functions, variables, and loops.
 
 In the next section, we will define the syntax and grammar of the Fafel language.
+
+## Smart Contract Example
+
+This Basic example shows the use of some basic variables and functions for the fafel language. This data will be exposed for other contracts to access. 
+
+```
+fafel storeData {
+    state {
+        value : int
+        dict : mapping(address->int)
+    }
+
+getValue () -> int
+getValue = value
+
+addressBal (address) -> int
+addressBal a = dict{a}
+
+setBal (address -> int) -> state
+setBal a b = dict{a} = b
+
+setVal (int) -> state
+setVal x = value := value + x
+}
+```
 
 ## Syntax
 
@@ -359,29 +395,6 @@ This parser specifically parses list assignment expressions, using the identifie
 #### Codegen
 
 #### Main
-
-## Example Code
-
-```
-fafel storeData {
-    state {
-        value : int
-        dict : mapping(address->int)
-    }
-
-getValue () -> int
-getValue = value
-
-addressBal (address) -> int
-addressBal a = dict{a}
-
-setBal (address -> int) -> state
-setBal a b = dict{a} = b
-
-setVal (int) -> state
-setVal x = value := value + x
-}
-```
 
 ## Comparisons
 
