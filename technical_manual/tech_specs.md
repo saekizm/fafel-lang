@@ -1,5 +1,8 @@
 # Tech Specs
 
+
+## Table of Contents
+
 ## Introduction
 
 Fafel is a functional programming language designed for writing smart contracts for the Ethereum Virtual Machine (EVM). It aims to provide an expressive, safe, and efficient way to define contract logic using a syntax that is familiar to functional programmers.
@@ -20,6 +23,8 @@ The remainder of this document is organized as follows:
 
 The goal of this document is to provide a comprehensive and accurate specification of the Fafel language, to enable developers to write secure and efficient smart contracts for the EVM, and to foster the growth of the Fafel community and ecosystem.
 
+
+## Blockchain Basics
 
 ## Overview
 
@@ -47,7 +52,7 @@ In the next section, we will define the syntax and grammar of the Fafel language
 
 This section defines the syntax and grammar of the Fafel language. The syntax is defined using Extended Backus-Naur Form (EBNF), which describes the valid sequences of tokens and nonterminals that make up Fafel contracts.
 
-## Lexical Structure
+#### Lexical Structure
 The lexical structure of Fafel is designed to follow similar patterns as other C-like languages. It consists of the following basic elements: keywords, operators, literals, identifiers, and comments.
 
 #### Keywords
@@ -56,7 +61,8 @@ Fafel has a set of keywords that are reserved and cannot be used as identifiers.
 `if, else, for, while, return, state, mapping, int, float, bool, address`
 
 #### Operators
-Fafel supports a range of binary and unary operators. The following binary operators are supported:   
+Fafel supports a range of binary operators. The following binary operators are supported:   
+
 `+, -, *, /, <, <=, >, >=, ==, &&, ||, :=`
 
 #### Literals
@@ -115,6 +121,7 @@ Fafel supports two types of comments: single-line comments and multi-line commen
 
 <bool> ::= "true" | "false"
 ```
+
 ## Semantics
 
 #### Overview
@@ -189,9 +196,198 @@ Once we have successfully typechecked the file, we then move onto `Codegen.hs`. 
 
 From here, we use the `solc` compiler to translate this Yul IR to bytecode. 
 
+#### AST
 
+#### Lexer
 
+The Lexer.hs file contains the implementation of the lexical analyzer for the Fafel programming language. It provides a set of functions to tokenize the input source code and generate a stream of tokens to be used by the parser. Here is the functional decomposition of Lexer.hs:
+
+* contractLanguage: This function defines the language specification for Fafel. It specifies the comment start, comment end, comment line, identifier start, identifier letter, reserved names, reserved operator names, and case sensitivity for the language.
+
+* lexer: This function generates a lexical analyzer for Fafel using the language specification provided by contractLanguage. It generates a TokenParser object which provides a set of functions to tokenize the input source code.
+
+* integer: This function parses an integer token using the TokenParser provided by lexer.
+
+* float: This function parses a float token using the TokenParser provided by lexer. It returns a tuple of two integers representing the numerator and denominator of the fraction.
+
+* parens: This function parses a token surrounded by parentheses using the TokenParser provided by lexer.
+
+* commaSep: This function parses a comma-separated list of tokens using the TokenParser provided by lexer.
+
+* semiSep: This function parses a semicolon-separated list of tokens using the TokenParser provided by lexer. It returns a list of parsed tokens.
+
+* identifier: This function parses an identifier token using the TokenParser provided by lexer.
+
+* reserved: This function parses a reserved keyword token using the TokenParser provided by lexer.
+
+* reservedOp: This function parses a reserved operator token using the TokenParser provided by lexer.
+
+* whitespace: This function parses whitespace using the TokenParser provided by lexer.
+
+* braces: This function parses a token surrounded by braces using the TokenParser provided by lexer.
+
+The functions defined in Lexer.hs work together to generate a stream of tokens from the input source code. These tokens are then used by the parser to generate an abstract syntax tree.
+
+#### Parser
+
+This module is used to parse Fafel source code into an AST. The Parser module has a parser for each type of AST node. The AST is built by combining these parsers, and then there is a parser for the entire contract.
+
+Functions:
+
+* stateVariableParser: This function takes a string as input and returns a StateVariable as output. It tries to parse different types of StateVariable in a specific order of precedence:
+
+```
+  - mapDeclParser
+  - listDeclParser
+  - addressDeclParser
+  - floatDeclParser
+  - intDeclParser
+  - boolDeclParser
+  
+```
+
+If none of these parsers match, it returns a parser error.
+
+intDeclParser:
+This function takes a string as input and returns an IntDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and an intTypeParser. Then it returns an IntDecl with the name of the variable and its type.
+
+floatDeclParser:
+This function takes a string as input and returns a FloatDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a floatTypeParser. Then it returns a FloatDecl with the name of the variable and its type.
+
+boolDeclParser:
+This function takes a string as input and returns a BoolDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a boolTypeParser. Then it returns a BoolDecl with the name of the variable and its type.
+
+addressDeclParser:
+This function takes a string as input and returns an AddressDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and an addressTypeParser. Then it returns an AddressDecl with the name of the variable and its type.
+
+mapDeclParser:
+This function takes a string as input and returns a MapDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a mapTypeParser. Then it returns a MapDecl with the name of the variable and its type.
+
+listDeclParser:
+This function takes a string as input and returns a ListDecl as output. It parses a string that starts with an identifier, followed by a colon, a space, and a listTypeParser. Then it returns a ListDecl with the name of the variable and its type.
+
+dataTypeParser:
+This function takes a string as input and returns a DataType as output. It tries to parse different types of DataType in a specific order of precedence:
+
+```
+  - stateTypeParser
+  - mapTypeParser
+  - listTypeParser
+  - addressTypeParser
+  - floatTypeParser
+  - intTypeParser
+  - boolTypeParser
+  
+```
+
+If none of these parsers match, it returns a parser error.
+
+floatTypeParser:
+This function takes a string as input and returns a FloatType as output. It parses the string "float".
+
+intTypeParser:
+This function takes a string as input and returns an IntType as output. It parses the string "int".
+
+boolTypeParser:
+This function takes a string as input and returns a BoolType as output. It parses the string "bool".
+
+addressTypeParser:
+This function takes a string as input and returns an AddressType as output. It parses the string "address".
+
+listTypeParser:
+This function takes a string as input and returns a ListType as output. It parses a string that starts with an open square bracket, followed by a dataTypeParser, and ends with a closing square bracket. Then it returns a ListType.
+
+mapTypeParser:
+This function takes a string as input and returns a MapType as output. It parses a string that starts with the word `mapping` followed by opening parentheses, then parses the data type, a string `->`, another data type is parsed, and then we finish by parsing the closing parentheses.
+
+stateTypeParser:
+This function takes a string as input and returns a StateType as output. It parses the string "state".
+
+literalParser:
+This parser tries to parse an expression from four different possible literal values: address, float, integer, and boolean. It uses the try parser combinator to attempt each literal in order.
+
+intLiteralParser:
+This parser specifically parses integer literals, creating an IntLit Literal expression using the integer parser.
+
+boolLiteralParser:
+This parser specifically parses boolean literals, creating a BoolLit Literal expression using the reserved parser and returning a Literal expression.
+
+addressLiteralParser:
+This parser specifically parses hexadecimal address literals, creating an AddressLit Literal expression using the count and satisfy parsers.
+
+floatLiteralParser:
+This parser specifically parses floating point number literals, creating a FloatLit Literal expression using the float parser.
+
+binary s f assoc = Ex.Infix (reservedOp s *> spaces *> return (BinaryExpr f)) assoc
+This is a helper function for constructing a binary operator expression parser. It takes a string s representing the operator symbol, a binary operator function f, and an associativity assoc value. It constructs an infix parser using the reservedOp parser, and returns a BinaryExpr expression.
+
+table
+This is a list of lists of operator parsers, representing the precedence levels and associativity of the different binary operators in the language. Each inner list contains parsers for operators with the same precedence level.
+
+opExpr:
+This is a parser for general operator expressions, which uses Ex.buildExpressionParser to parse expressions based on the precedence and associativity defined in table. It uses the term parser as a base, and then applies the table of binary operator parsers to build up the expression.
+
+expr:
+This parser attempts to parse different types of expressions in order: map assignment, list assignment, operator expressions, and literal expressions. If none of these parsers succeed, it attempts to parse a variable or an expression inside parentheses.
+
+term:
+This parser attempts to parse different types of term expressions in order: function calls, map expressions, list expressions, if expressions, map assignments, literal expressions, variables, and expressions inside parentheses.
+
+ifExprParser:
+This parser specifically parses if-else expressions, using the reserved parser to match the keywords and returning an IfExpr expression.
+
+variable:
+This parser specifically parses variable expressions, using the identifier parser to match the variable name and returning a Var expression.
+
+functionCallParser:
+This parser specifically parses function call expressions, using the identifier parser to match the function name and the parens and commaSep parsers to match the argument list.
+
+mapExprParser:
+This parser specifically parses map expressions, using the identifier, char, and expr parsers to match the map name and key expression.
+
+mapAssignParser:
+This parser specifically parses map assignment expressions, using the identifier, char, expr, spaces, and = parsers to match the map name, key expression, and value expression.
+
+listExprParser: 
+This parser specifically parses list expressions, using the identifier, char, and expr parsers to match the list name and index expression.
+
+listAssignParser:
+This parser specifically parses list assignment expressions, using the identifier, brackets, expr, spaces, and = parsers to match the list name, index expression, and value expression. It creates a ListAssignExpr expression.
+
+#### TypeChecker
+
+#### Codegen
+
+#### Main
 
 ## Example Code
 
+```
+fafel storeData {
+    state {
+        value : int
+        dict : mapping(address->int)
+    }
+
+getValue () -> int
+getValue = value
+
+addressBal (address) -> int
+addressBal a = dict{a}
+
+setBal (address -> int) -> state
+setBal a b = dict{a} = b
+
+setVal (int) -> state
+setVal x = value := value + x
+}
+```
+
 ## Comparisons
+
+As solidity is the main smart contract programming language by a wide mile, we will focus on comparisons with Solidity.
+
+Obviously, Solidity is a much more feature rich language. Fafel is a first attempt at programming languge design and creation and is very much a constant work in progress. However, Fafel implements basic enough functionality as to be suitable enough for writing simple smart contracts. 
+
+Solidity has many features, including external calls, modifiers, function visiblity and so on...  
+Fafel is similar to Haskell, while Solidity is more akin to C++ or Javascript.
