@@ -395,9 +395,63 @@ This parser specifically parses list assignment expressions, using the identifie
 
 #### TypeChecker
 
+The TypeChecker module is a Haskell module for typechecking the Fafel programming language. The module has several functions for working with the Fafel abstract syntax tree (AST). The module includes the following:
+
+* An import statement for the AST module.
+* An import statement for Data.Map.
+* An import statement for Data.Either.
+* An import statement for Control.Monad.State.
+* A type alias Result that is an Either type of a String and DataType.
+* A type alias Symbol that is an Either type of a DataType and a Map of string to DataType.
+* A type alias SymbolTable that is a Map of string to Symbol.
+* A type alias FafelState a that is a StateT monad with a SymbolTable as its state and an IO action as its result type.
+* A function insertStateVars that inserts a list of state variables into the symbol table.
+* A function insertFunctions that inserts a list of functions into the symbol table.
+* A function insertToFuncMap that inserts a function and its arguments into the symbol table.
+* A function typecheckFunction that typechecks a function by looking it up in the symbol table, extracting the argument variables from the body, adding the arguments and argument types to the nested map for that function, and then typechecking the body.
+* A function typecheckExpr that typechecks an expression by checking the type of the expression against the expected type and returning an error message if they do not match.
+
+
 #### Codegen
 
+The Codegen module provides a way to generate Yul code from an AST. It includes functions for generating Yul code for each type of AST node and a generator for the entire contract. The SymbolTable type is defined as a mapping of variable names to their slot in memory, and the FafelState type is a state monad used to keep track of the symbol table and the current slot for storage.
+
+The functions included in the module are:
+
+* initialSymbolTable: returns an empty symbol table.
+* getSlot: gets the next available slot in memory.
+* addToSymbolTable: adds a variable name and its slot to the symbol table.
+* lookupInSymbolTable: looks up a variable name in the symbol table and returns its slot, if it exists.
+* genYulLit: generates Yul code for a literal.
+* genYulBinaryOp: generates Yul code for a binary operator.
+* genYulExpr: generates Yul code for an expression.
+* genYulWrapper: generates a Yul code wrapper for an expression.
+* genYulBinaryExpr: generates Yul code for a binary expression.
+* getVarName: gets the variable name from a variable expression.
+* genYulFuncCall: generates Yul code for a function call.
+* genYulVar: generates Yul code for a variable.
+* genYulStateVariable: generates Yul code for a state variable.
+* genYulIfExpr: generates Yul code for an if expression.
+* genYulFunctionExpr: generates Yul code for a function expression.
+* genYulMappingExpr: generates Yul code for a mapping expression.
+* genYulMappingAssign: generates Yul code for a mapping assignment.
+* genYulListExpr: generates Yul code for a list expression.
+* genYulListAssign: generates Yul code for a list assignment.
+
 #### Main
+
+Our Main file is the controller of all these files, and is where the magic happens. We write a main function which handles all aspects of the compilation process, as well as deployment or sending transactions.
+
+## Testing and Validation
+
+Testing of the Fafel language was an iterative process. We began by writing our parser. We wrote some test functions `parseString` and `parseFile` to test every new parser function we wrote.
+
+The typechecker file itself returns errors when typechecking has failed, so again, we iteratively figured out where sections of our code was wrong, but trying to compile contracts and spotting whether something should have typechecked successfully or not.
+
+Testing the Codegen file again, involved trying out every generator function. We passed AST's to our codegen file and iterated on whether the results were what we were expecting. This also sometimes involved compiled our generated Yul code to see if what we were generating was syntactically correct.
+
+Most of the time testing was done by running the pipeline after some substantial changes along the way, and fixing bugs wherever they popped up.
+
 
 ## Comparisons
 
