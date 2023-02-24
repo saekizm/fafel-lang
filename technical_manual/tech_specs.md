@@ -1,6 +1,5 @@
 # Tech Specs
 
-
 ## Table of Contents
 
 ## Introduction
@@ -231,6 +230,10 @@ Once we get passed the parse successfully, our `Parser.hs` file will have return
 Once we have successfully typechecked the file, we then move onto `Codegen.hs`. The code generator file takes in the AST and performs the translation to Yul code. Again, we use a symbol table to store any relevant data we need to refer back to when generating the Yul code.
 
 From here, we use the `solc` compiler to translate this Yul IR to bytecode. 
+
+#### Yul
+
+Yul is a useful intermediate language that is compiled to bytecode for backends. Yul is commonly used in the Ethereum network and is used to write smart contracts on the EVM. The language is low-level, similar to assembly language. Yul aims to be readable, easy to understand, and provides straightforward translation to bytecode. Making it suitable for low-level utility on the EVM, Yul translates into EVM bytecode and is then executed on the EVM. This provides developers with an efficient tool to write smart contracts on the Ethereum network.
 
 #### AST
 
