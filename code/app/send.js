@@ -4,7 +4,7 @@ require('dotenv').config();
 const web3 = new Web3(process.env.ENDPOINT);
 
 // Replace with the address of the contract you want to interact with
-const contractAddress = '0x42C0480E91f019a267AB64F3b60Ac378E25eaBaE';
+const contractAddress = '0x225a400be34eAB0A0E54862eB29a422e17995Cd7';
 
 // Replace with the function signature you want to call
 const functionSignature = process.argv[2];

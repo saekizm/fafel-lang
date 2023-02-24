@@ -6,7 +6,6 @@ fafel myContract {
         myMap2 : mapping(int->int)
 }
 
-
 addValue : (int) -> float
 addValue x = value + 3 * 2.1
 
